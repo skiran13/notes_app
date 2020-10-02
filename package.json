@@ -1,0 +1,19 @@
+{
+  "name": "workindia",
+  "version": "1.0.0",
+  "description": "Notes app for WorkIndia Recruitment",
+  "main": "index.js",
+  "scripts": {
+    "test": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "author": "Surya Kiran",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "crypto": "^1.0.1",
+    "express": "^4.17.1",
+    "md5": "^2.3.0",
+    "mysql": "^2.18.1"
+  }
+}
