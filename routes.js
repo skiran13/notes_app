@@ -2,10 +2,24 @@ const express = require('express');
 var md5 = require('md5');
 const db = require('./db');
 const crypto = require('crypto');
-const secret = process.env.SECRET;
 const router = express.Router();
 const key = crypto.randomBytes(32);
 const iv = crypto.randomBytes(16);
+
+function encrypt(text) {
+  let cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
+  let encrypted = cipher.update(text);
+  encrypted = Buffer.concat([encrypted, cipher.final()]);
+  return { iv: iv.toString('hex'), encryptedData: encrypted.toString('hex') };
+}
+
+function decrypt(text) {
+  let encryptedText = Buffer.from(text, 'hex');
+  let decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(key), iv);
+  let decrypted = decipher.update(encryptedText);
+  decrypted = Buffer.concat([decrypted, decipher.final()]);
+  return decrypted.toString();
+}
 
 router.get('/', (req, res) => {
   res.send('Welcome to Notes app for Work India recruitment!');
@@ -22,17 +36,7 @@ router.get('/app/sites/list/', (req, res) => {
         });
       } else {
         res.json({
-          notes: rows.map((doc, i) => {
-            let decipher = crypto.createDecipheriv(
-              'aes-256-cbc',
-              Buffer.from(key),
-              iv
-            );
-            let encryptedText = Buffer.from(doc.note, 'hex');
-            let decrypted = decipher.update(encryptedText);
-            decypted = Buffer.concat([decrypted, decipher.final()]);
-            return decrypted.toString();
-          }),
+          notes: rows.map((doc, i) => decrypt(doc.note)),
         });
       }
     }
@@ -98,13 +102,11 @@ router.post('/app/user/auth', function (req, res) {
 router.post('/app/sites/', (req, res) => {
   const uid = req.query.user;
   const note = req.body.note;
-  let cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
-  let encrypted = cipher.update(note);
-  encrypted = Buffer.concat([encrypted, cipher.final()]);
+  encrypted = encrypt(note);
   const value = {
     userId: uid,
     noteId: Math.floor(Math.random() * 90000) + 10000,
-    note: encrypted.toString('hex'),
+    note: encrypted.encryptedData,
   };
   db.query('INSERT INTO notes SET ?', value, (err, rows, fields) => {
     if (err) res.json({ status: err });
