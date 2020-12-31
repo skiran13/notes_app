@@ -4,7 +4,9 @@ const db = require('./db');
 const crypto = require('crypto');
 const router = express.Router();
 const key = crypto.randomBytes(32);
+
 const iv = crypto.randomBytes(16);
+
 
 function encrypt(text) {
   let cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
